@@ -179,7 +179,7 @@ export const saveSettings = createServerFn({ method: "POST" })
 
     const { data: saved, error } = await supabase
       .from("bot_settings")
-      .upsert(patch, { onConflict: "user_id" })
+      .upsert(patch as never, { onConflict: "user_id" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
@@ -300,7 +300,7 @@ export const runTick = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<TickResult> => {
     const { supabase, userId } = context;
-    const { fetchTickers, fetchKlines, placeMarketOrder } = await import("@/lib/exchange.server");
+    const { fetchTickers, fetchKlines } = await import("@/lib/exchange.server");
     const events: string[] = [];
 
     const [settingsRes, watchRes, openRes] = await Promise.all([
