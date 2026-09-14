@@ -14,7 +14,255 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bot_logs: {
+        Row: {
+          created_at: string
+          id: string
+          level: string
+          message: string
+          symbol: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: string
+          message: string
+          symbol?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          symbol?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bot_settings: {
+        Row: {
+          bot_enabled: boolean
+          breakout_lookback: number
+          daily_loss_limit_usdt: number
+          max_positions: number
+          min_momentum_pct: number
+          mode: string
+          paper_balance: number
+          position_size_usdt: number
+          stop_loss_pct: number
+          take_profit_pct: number
+          updated_at: string
+          user_id: string
+          volume_spike_threshold: number
+        }
+        Insert: {
+          bot_enabled?: boolean
+          breakout_lookback?: number
+          daily_loss_limit_usdt?: number
+          max_positions?: number
+          min_momentum_pct?: number
+          mode?: string
+          paper_balance?: number
+          position_size_usdt?: number
+          stop_loss_pct?: number
+          take_profit_pct?: number
+          updated_at?: string
+          user_id: string
+          volume_spike_threshold?: number
+        }
+        Update: {
+          bot_enabled?: boolean
+          breakout_lookback?: number
+          daily_loss_limit_usdt?: number
+          max_positions?: number
+          min_momentum_pct?: number
+          mode?: string
+          paper_balance?: number
+          position_size_usdt?: number
+          stop_loss_pct?: number
+          take_profit_pct?: number
+          updated_at?: string
+          user_id?: string
+          volume_spike_threshold?: number
+        }
+        Relationships: []
+      }
+      exchange_credentials: {
+        Row: {
+          api_key_cipher: string
+          api_secret_cipher: string
+          created_at: string
+          exchange: string
+          key_hint: string
+          last_validated_at: string | null
+          updated_at: string
+          user_id: string
+          validated: boolean
+        }
+        Insert: {
+          api_key_cipher: string
+          api_secret_cipher: string
+          created_at?: string
+          exchange?: string
+          key_hint?: string
+          last_validated_at?: string | null
+          updated_at?: string
+          user_id: string
+          validated?: boolean
+        }
+        Update: {
+          api_key_cipher?: string
+          api_secret_cipher?: string
+          created_at?: string
+          exchange?: string
+          key_hint?: string
+          last_validated_at?: string | null
+          updated_at?: string
+          user_id?: string
+          validated?: boolean
+        }
+        Relationships: []
+      }
+      positions: {
+        Row: {
+          closed_at: string | null
+          entry_price: number
+          exit_price: number | null
+          exit_reason: string | null
+          id: string
+          mode: string
+          notional_usdt: number
+          opened_at: string
+          pnl_pct: number | null
+          pnl_usdt: number | null
+          quantity: number
+          side: string
+          source: string
+          status: string
+          stop_loss_price: number
+          symbol: string
+          take_profit_price: number
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          entry_price: number
+          exit_price?: number | null
+          exit_reason?: string | null
+          id?: string
+          mode?: string
+          notional_usdt: number
+          opened_at?: string
+          pnl_pct?: number | null
+          pnl_usdt?: number | null
+          quantity: number
+          side?: string
+          source?: string
+          status?: string
+          stop_loss_price: number
+          symbol: string
+          take_profit_price: number
+          user_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          entry_price?: number
+          exit_price?: number | null
+          exit_reason?: string | null
+          id?: string
+          mode?: string
+          notional_usdt?: number
+          opened_at?: string
+          pnl_pct?: number | null
+          pnl_usdt?: number | null
+          quantity?: number
+          side?: string
+          source?: string
+          status?: string
+          stop_loss_price?: number
+          symbol?: string
+          take_profit_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      signals: {
+        Row: {
+          created_at: string
+          id: string
+          momentum_pct: number
+          price: number
+          signal_type: string
+          strength: number
+          symbol: string
+          user_id: string
+          volume_ratio: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          momentum_pct?: number
+          price: number
+          signal_type: string
+          strength?: number
+          symbol: string
+          user_id: string
+          volume_ratio?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          momentum_pct?: number
+          price?: number
+          signal_type?: string
+          strength?: number
+          symbol?: string
+          user_id?: string
+          volume_ratio?: number
+        }
+        Relationships: []
+      }
+      watchlist: {
+        Row: {
+          created_at: string
+          id: string
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
