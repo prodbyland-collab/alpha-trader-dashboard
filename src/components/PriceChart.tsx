@@ -5,9 +5,9 @@ type Marker = { time: number; price: number; kind: "entry" | "exit" };
 
 type Props = {
   candles: Candle[];
-  markers?: Marker[];
-  breakoutLevel?: number;
-  height?: number;
+  markers?: Marker[] | undefined;
+  breakoutLevel?: number | undefined;
+  height?: number | undefined;
 };
 
 export function PriceChart({ candles, markers = [], breakoutLevel, height = 320 }: Props) {

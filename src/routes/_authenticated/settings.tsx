@@ -47,7 +47,7 @@ function Row({
   children,
 }: {
   label: string;
-  hint?: string;
+  hint?: string | undefined;
   children: React.ReactNode;
 }) {
   return (
@@ -72,7 +72,7 @@ function SliderRow({
   onChange,
 }: {
   label: string;
-  hint?: string;
+  hint?: string | undefined;
   value: number;
   min: number;
   max: number;
