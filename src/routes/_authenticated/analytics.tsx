@@ -171,8 +171,13 @@ function AnalyticsPage() {
           <div className="rounded-xl border border-border bg-card p-4">
             <h2 className="text-sm font-semibold">Best trade</h2>
             {d?.best ? (
-              <p className="tabular mt-2 text-sm text-profit">
-                {d.best.symbol} +{(d.best.pnl_usdt ?? 0).toFixed(2)} USDT (
+              <p
+                className={`tabular mt-2 text-sm ${
+                  (d.best.pnl_usdt ?? 0) >= 0 ? "text-profit" : "text-loss"
+                }`}
+              >
+                {d.best.symbol} {(d.best.pnl_usdt ?? 0) >= 0 ? "+" : ""}
+                {(d.best.pnl_usdt ?? 0).toFixed(2)} USDT (
                 {(d.best.pnl_pct ?? 0).toFixed(2)}%)
               </p>
             ) : (
