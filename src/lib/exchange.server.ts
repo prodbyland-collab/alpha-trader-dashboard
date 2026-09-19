@@ -1,6 +1,14 @@
 // Binance REST access. Server-only: API secrets never leave this boundary.
 
-const BASE = "https://api.binance.com";
+// The primary host blocks some edge IPs (403); fall back to alternates.
+const BASES = [
+  "https://api.binance.com",
+  "https://api1.binance.com",
+  "https://api2.binance.com",
+  "https://api3.binance.com",
+  "https://api4.binance.com",
+  "https://data-api.binance.vision",
+];
 
 export type Ticker = {
   symbol: string;
@@ -21,12 +29,25 @@ export type Candle = {
 };
 
 async function publicGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { headers: { accept: "application/json" } });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Exchange request failed (${res.status}): ${body.slice(0, 200)}`);
+  let lastError: Error | null = null;
+  for (const base of BASES) {
+    try {
+      const res = await fetch(`${base}${path}`, { headers: { accept: "application/json" } });
+      if (!res.ok) {
+        // 403/418 = IP blocked on this host; try the next one.
+        if (res.status === 403 || res.status === 418) {
+          lastError = new Error(`Exchange request failed (${res.status})`);
+          continue;
+        }
+        const body = await res.text();
+        throw new Error(`Exchange request failed (${res.status}): ${body.slice(0, 200)}`);
+      }
+      return (await res.json()) as T;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
   }
-  return (await res.json()) as T;
+  throw lastError ?? new Error("Exchange request failed on all endpoints");
 }
 
 export async function fetchTickers(symbols: string[]): Promise<Ticker[]> {
