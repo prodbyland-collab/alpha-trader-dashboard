@@ -123,7 +123,7 @@ export async function signedRequest<T>(
     recvWindow: "10000",
   }).toString();
   const signature = await sign(apiSecret, query);
-  const url = `${BASE}${path}?${query}&signature=${signature}`;
+  const url = `${BASES[0]}${path}?${query}&signature=${signature}`;
   const res = await fetch(url, { method, headers: { "X-MBX-APIKEY": apiKey } });
   const text = await res.text();
   if (!res.ok) {
