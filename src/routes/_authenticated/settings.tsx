@@ -374,6 +374,18 @@ function SettingsPage() {
             suffix="%"
             onChange={(v) => set({ min_momentum_pct: Number(v.toFixed(1)) })}
           />
+          <Row
+            label="Only buy in an uptrend"
+            hint="Skips signals while the short-term trend is falling, where breakouts fail most often."
+          >
+            <Switch
+              checked={draft.trend_filter_enabled}
+              onCheckedChange={(checked) => {
+                set({ trend_filter_enabled: checked });
+                save.mutate({ trend_filter_enabled: checked });
+              }}
+            />
+          </Row>
         </section>
 
         <section className="rounded-xl border border-border bg-card px-5 py-3">
