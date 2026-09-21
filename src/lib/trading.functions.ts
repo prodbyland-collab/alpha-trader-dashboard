@@ -37,20 +37,26 @@ export type Position = {
   source: string;
   opened_at: string;
   closed_at: string | null;
+  peak_price: number;
+  trailing_active: boolean;
 };
 
 const DEFAULT_SETTINGS: BotSettings = {
   mode: "paper",
   bot_enabled: false,
-  take_profit_pct: 2,
+  take_profit_pct: 2.5,
   stop_loss_pct: 1,
-  volume_spike_threshold: 2.5,
-  breakout_lookback: 20,
-  min_momentum_pct: 0.5,
+  volume_spike_threshold: 1.8,
+  breakout_lookback: 12,
+  min_momentum_pct: 0.25,
   position_size_usdt: 250,
-  max_positions: 3,
+  max_positions: 5,
   daily_loss_limit_usdt: 150,
   paper_balance: 10000,
+  trailing_enabled: true,
+  trail_activate_pct: 1.2,
+  trail_giveback_pct: 0.6,
+  trend_filter_enabled: true,
 };
 
 function num(value: unknown, fallback = 0): number {
