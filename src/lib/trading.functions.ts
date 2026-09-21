@@ -78,6 +78,11 @@ function normaliseSettings(raw: Record<string, unknown> | null): BotSettings {
     max_positions: Math.round(num(raw["max_positions"], 3)),
     daily_loss_limit_usdt: num(raw["daily_loss_limit_usdt"], 150),
     paper_balance: num(raw["paper_balance"], 10000),
+    trailing_enabled: raw["trailing_enabled"] === undefined ? true : Boolean(raw["trailing_enabled"]),
+    trail_activate_pct: num(raw["trail_activate_pct"], 1.2),
+    trail_giveback_pct: num(raw["trail_giveback_pct"], 0.6),
+    trend_filter_enabled:
+      raw["trend_filter_enabled"] === undefined ? true : Boolean(raw["trend_filter_enabled"]),
   };
 }
 
