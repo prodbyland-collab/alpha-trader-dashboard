@@ -53,6 +53,10 @@ export type Database = {
           position_size_usdt: number
           stop_loss_pct: number
           take_profit_pct: number
+          trail_activate_pct: number
+          trail_giveback_pct: number
+          trailing_enabled: boolean
+          trend_filter_enabled: boolean
           updated_at: string
           user_id: string
           volume_spike_threshold: number
@@ -68,6 +72,10 @@ export type Database = {
           position_size_usdt?: number
           stop_loss_pct?: number
           take_profit_pct?: number
+          trail_activate_pct?: number
+          trail_giveback_pct?: number
+          trailing_enabled?: boolean
+          trend_filter_enabled?: boolean
           updated_at?: string
           user_id: string
           volume_spike_threshold?: number
@@ -83,6 +91,10 @@ export type Database = {
           position_size_usdt?: number
           stop_loss_pct?: number
           take_profit_pct?: number
+          trail_activate_pct?: number
+          trail_giveback_pct?: number
+          trailing_enabled?: boolean
+          trend_filter_enabled?: boolean
           updated_at?: string
           user_id?: string
           volume_spike_threshold?: number
@@ -135,6 +147,7 @@ export type Database = {
           mode: string
           notional_usdt: number
           opened_at: string
+          peak_price: number | null
           pnl_pct: number | null
           pnl_usdt: number | null
           quantity: number
@@ -144,6 +157,7 @@ export type Database = {
           stop_loss_price: number
           symbol: string
           take_profit_price: number
+          trailing_active: boolean
           user_id: string
         }
         Insert: {
@@ -155,6 +169,7 @@ export type Database = {
           mode?: string
           notional_usdt: number
           opened_at?: string
+          peak_price?: number | null
           pnl_pct?: number | null
           pnl_usdt?: number | null
           quantity: number
@@ -164,6 +179,7 @@ export type Database = {
           stop_loss_price: number
           symbol: string
           take_profit_price: number
+          trailing_active?: boolean
           user_id: string
         }
         Update: {
@@ -175,6 +191,7 @@ export type Database = {
           mode?: string
           notional_usdt?: number
           opened_at?: string
+          peak_price?: number | null
           pnl_pct?: number | null
           pnl_usdt?: number | null
           quantity?: number
@@ -184,6 +201,7 @@ export type Database = {
           stop_loss_price?: number
           symbol?: string
           take_profit_price?: number
+          trailing_active?: boolean
           user_id?: string
         }
         Relationships: []
