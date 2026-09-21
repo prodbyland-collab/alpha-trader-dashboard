@@ -343,6 +343,7 @@ export const runTick = createServerFn({ method: "POST" })
       volumeSpikeThreshold: settings.volume_spike_threshold,
       breakoutLookback: settings.breakout_lookback,
       minMomentumPct: settings.min_momentum_pct,
+      trendFilterEnabled: settings.trend_filter_enabled,
     };
 
     // --- market data -------------------------------------------------------
