@@ -397,15 +397,56 @@ export const runTick = createServerFn({ method: "POST" })
     for (const position of openPositions.filter((p) => p.mode === settings.mode)) {
       const price = priceOf(position.symbol);
       if (!price) continue;
+
+      let stop = position.stop_loss_price;
+      let trailingActive = position.trailing_active;
+      const peak = Math.max(position.peak_price || position.entry_price, price);
+
+      if (settings.trailing_enabled) {
+        const nextStop = trailingStopPrice(
+          position.entry_price,
+          peak,
+          stop,
+          settings.trail_activate_pct,
+          settings.trail_giveback_pct,
+        );
+        if (nextStop !== null) {
+          stop = nextStop;
+          trailingActive = true;
+        }
+      }
+
+      if (peak !== position.peak_price || stop !== position.stop_loss_price) {
+        await supabase
+          .from("positions")
+          .update({ peak_price: peak, stop_loss_price: stop, trailing_active: trailingActive })
+          .eq("id", position.id)
+          .eq("user_id", userId);
+      }
+
       let reason: string | null = null;
-      if (price >= position.take_profit_price) reason = "take_profit";
-      else if (price <= position.stop_loss_price) reason = "stop_loss";
+      // With trailing on, a winner is left to run and only the rising stop
+      // closes it. Without trailing, the fixed take-profit still applies.
+      if (!settings.trailing_enabled && price >= position.take_profit_price) reason = "take_profit";
+      else if (price <= stop) reason = trailingActive ? "trailing_stop" : "stop_loss";
       if (!reason) continue;
 
-      const closed = await closeOne(supabase, userId, position, price, reason, settings.mode, credentials);
-      events.push(
-        `${position.symbol} closed at ${reason === "take_profit" ? "take-profit" : "stop-loss"} (${closed.pnl_pct.toFixed(2)}%)`,
+      const closed = await closeOne(
+        supabase,
+        userId,
+        { ...position, stop_loss_price: stop },
+        price,
+        reason,
+        settings.mode,
+        credentials,
       );
+      const label =
+        reason === "take_profit"
+          ? "take-profit"
+          : reason === "trailing_stop"
+            ? "trailing stop"
+            : "stop-loss";
+      events.push(`${position.symbol} closed at ${label} (${closed.pnl_pct.toFixed(2)}%)`);
     }
 
     const { data: refreshedOpen } = await supabase
