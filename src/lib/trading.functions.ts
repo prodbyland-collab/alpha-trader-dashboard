@@ -104,6 +104,8 @@ function normalisePosition(raw: Record<string, unknown>): Position {
     source: String(raw["source"] ?? "bot"),
     opened_at: String(raw["opened_at"]),
     closed_at: (raw["closed_at"] as string | null) ?? null,
+    peak_price: num(raw["peak_price"], num(raw["entry_price"])),
+    trailing_active: Boolean(raw["trailing_active"]),
   };
 }
 
