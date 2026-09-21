@@ -588,6 +588,8 @@ async function openOne(
       notional_usdt: entryPrice * quantity,
       take_profit_price: entryPrice * (1 + settings.take_profit_pct / 100),
       stop_loss_price: entryPrice * (1 - settings.stop_loss_pct / 100),
+      peak_price: entryPrice,
+      trailing_active: false,
       source: "bot",
     })
     .select("*")
