@@ -14,6 +14,10 @@ export type BotSettings = {
   max_positions: number;
   daily_loss_limit_usdt: number;
   paper_balance: number;
+  trailing_enabled: boolean;
+  trail_activate_pct: number;
+  trail_giveback_pct: number;
+  trend_filter_enabled: boolean;
 };
 
 export type Position = {
