@@ -213,8 +213,16 @@ function Dashboard() {
           />
           <Stat
             label="Exit rules"
-            value={`+${settings?.take_profit_pct ?? 0}% / −${settings?.stop_loss_pct ?? 0}%`}
-            hint={`${settings?.position_size_usdt ?? 0} USDT per trade`}
+            value={
+              settings?.trailing_enabled
+                ? `Trail −${settings.trail_giveback_pct}% / −${settings.stop_loss_pct}%`
+                : `+${settings?.take_profit_pct ?? 0}% / −${settings?.stop_loss_pct ?? 0}%`
+            }
+            hint={
+              settings?.trailing_enabled
+                ? `Profit runs after +${settings.trail_activate_pct}% · ${settings.position_size_usdt} USDT per trade`
+                : `${settings?.position_size_usdt ?? 0} USDT per trade`
+            }
           />
           <Stat
             label="Signals now"
