@@ -193,6 +193,13 @@ export const saveSettings = createServerFn({ method: "POST" })
       patch["daily_loss_limit_usdt"] = clamp(data.daily_loss_limit_usdt, 1, 1000000);
     if (data.paper_balance !== undefined)
       patch["paper_balance"] = clamp(data.paper_balance, 100, 10000000);
+    if (data.trailing_enabled !== undefined) patch["trailing_enabled"] = data.trailing_enabled;
+    if (data.trend_filter_enabled !== undefined)
+      patch["trend_filter_enabled"] = data.trend_filter_enabled;
+    if (data.trail_activate_pct !== undefined)
+      patch["trail_activate_pct"] = clamp(data.trail_activate_pct, 0.2, 10);
+    if (data.trail_giveback_pct !== undefined)
+      patch["trail_giveback_pct"] = clamp(data.trail_giveback_pct, 0.1, 5);
 
     const { data: saved, error } = await supabase
       .from("bot_settings")
