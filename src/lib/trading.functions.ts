@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { analyseCandles, qualifiesForEntry, type ScanRow } from "@/lib/strategy";
+import {
+  analyseCandles,
+  qualifiesForEntry,
+  trailingStopPrice,
+  type ScanRow,
+} from "@/lib/strategy";
 
 export type BotSettings = {
   mode: "paper" | "live";
