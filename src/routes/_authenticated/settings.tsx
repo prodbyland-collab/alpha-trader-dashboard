@@ -278,16 +278,58 @@ function SettingsPage() {
 
         <section className="rounded-xl border border-border bg-card px-5 py-3">
           <h2 className="pt-2 text-sm font-semibold">Exits</h2>
-          <SliderRow
-            label="Take profit"
-            hint="Target per trade. 1–5% keeps the daily goal realistic."
-            value={draft.take_profit_pct}
-            min={1}
-            max={5}
-            step={0.1}
-            suffix="%"
-            onChange={(v) => set({ take_profit_pct: Number(v.toFixed(1)) })}
-          />
+          <Row
+            label="Let winners run (trailing profit)"
+            hint="Instead of selling at a fixed target, the exit follows the price up and only sells when it gives back the amount below."
+          >
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={draft.trailing_enabled}
+                onCheckedChange={(checked) => {
+                  set({ trailing_enabled: checked });
+                  save.mutate({ trailing_enabled: checked });
+                }}
+              />
+              <Badge variant={draft.trailing_enabled ? "default" : "secondary"}>
+                {draft.trailing_enabled ? "Trailing" : "Fixed target"}
+              </Badge>
+            </div>
+          </Row>
+          {draft.trailing_enabled ? (
+            <>
+              <SliderRow
+                label="Start trailing after"
+                hint="Profit needed before the exit starts following the price up."
+                value={draft.trail_activate_pct}
+                min={0.2}
+                max={5}
+                step={0.1}
+                suffix="%"
+                onChange={(v) => set({ trail_activate_pct: Number(v.toFixed(1)) })}
+              />
+              <SliderRow
+                label="Give back at most"
+                hint="How far the price may fall from its best level before the trade is closed in profit."
+                value={draft.trail_giveback_pct}
+                min={0.1}
+                max={5}
+                step={0.1}
+                suffix="%"
+                onChange={(v) => set({ trail_giveback_pct: Number(v.toFixed(1)) })}
+              />
+            </>
+          ) : (
+            <SliderRow
+              label="Take profit"
+              hint="Target per trade. 1–5% keeps the daily goal realistic."
+              value={draft.take_profit_pct}
+              min={1}
+              max={5}
+              step={0.1}
+              suffix="%"
+              onChange={(v) => set({ take_profit_pct: Number(v.toFixed(1)) })}
+            />
+          )}
           <SliderRow
             label="Stop loss"
             hint="Maximum loss before the position is closed automatically."
@@ -332,6 +374,18 @@ function SettingsPage() {
             suffix="%"
             onChange={(v) => set({ min_momentum_pct: Number(v.toFixed(1)) })}
           />
+          <Row
+            label="Only buy in an uptrend"
+            hint="Skips signals while the short-term trend is falling, where breakouts fail most often."
+          >
+            <Switch
+              checked={draft.trend_filter_enabled}
+              onCheckedChange={(checked) => {
+                set({ trend_filter_enabled: checked });
+                save.mutate({ trend_filter_enabled: checked });
+              }}
+            />
+          </Row>
         </section>
 
         <section className="rounded-xl border border-border bg-card px-5 py-3">

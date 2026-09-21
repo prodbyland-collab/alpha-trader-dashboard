@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { analyseCandles, qualifiesForEntry, type ScanRow } from "@/lib/strategy";
+import {
+  analyseCandles,
+  qualifiesForEntry,
+  trailingStopPrice,
+  type ScanRow,
+} from "@/lib/strategy";
 
 export type BotSettings = {
   mode: "paper" | "live";
@@ -14,6 +19,10 @@ export type BotSettings = {
   max_positions: number;
   daily_loss_limit_usdt: number;
   paper_balance: number;
+  trailing_enabled: boolean;
+  trail_activate_pct: number;
+  trail_giveback_pct: number;
+  trend_filter_enabled: boolean;
 };
 
 export type Position = {
@@ -33,20 +42,26 @@ export type Position = {
   source: string;
   opened_at: string;
   closed_at: string | null;
+  peak_price: number;
+  trailing_active: boolean;
 };
 
 const DEFAULT_SETTINGS: BotSettings = {
   mode: "paper",
   bot_enabled: false,
-  take_profit_pct: 2,
+  take_profit_pct: 2.5,
   stop_loss_pct: 1,
-  volume_spike_threshold: 2.5,
-  breakout_lookback: 20,
-  min_momentum_pct: 0.5,
+  volume_spike_threshold: 1.8,
+  breakout_lookback: 12,
+  min_momentum_pct: 0.25,
   position_size_usdt: 250,
-  max_positions: 3,
+  max_positions: 5,
   daily_loss_limit_usdt: 150,
   paper_balance: 10000,
+  trailing_enabled: true,
+  trail_activate_pct: 1.2,
+  trail_giveback_pct: 0.6,
+  trend_filter_enabled: true,
 };
 
 function num(value: unknown, fallback = 0): number {
@@ -68,6 +83,11 @@ function normaliseSettings(raw: Record<string, unknown> | null): BotSettings {
     max_positions: Math.round(num(raw["max_positions"], 3)),
     daily_loss_limit_usdt: num(raw["daily_loss_limit_usdt"], 150),
     paper_balance: num(raw["paper_balance"], 10000),
+    trailing_enabled: raw["trailing_enabled"] === undefined ? true : Boolean(raw["trailing_enabled"]),
+    trail_activate_pct: num(raw["trail_activate_pct"], 1.2),
+    trail_giveback_pct: num(raw["trail_giveback_pct"], 0.6),
+    trend_filter_enabled:
+      raw["trend_filter_enabled"] === undefined ? true : Boolean(raw["trend_filter_enabled"]),
   };
 }
 
@@ -89,6 +109,8 @@ function normalisePosition(raw: Record<string, unknown>): Position {
     source: String(raw["source"] ?? "bot"),
     opened_at: String(raw["opened_at"]),
     closed_at: (raw["closed_at"] as string | null) ?? null,
+    peak_price: num(raw["peak_price"], num(raw["entry_price"])),
+    trailing_active: Boolean(raw["trailing_active"]),
   };
 }
 
@@ -176,6 +198,13 @@ export const saveSettings = createServerFn({ method: "POST" })
       patch["daily_loss_limit_usdt"] = clamp(data.daily_loss_limit_usdt, 1, 1000000);
     if (data.paper_balance !== undefined)
       patch["paper_balance"] = clamp(data.paper_balance, 100, 10000000);
+    if (data.trailing_enabled !== undefined) patch["trailing_enabled"] = data.trailing_enabled;
+    if (data.trend_filter_enabled !== undefined)
+      patch["trend_filter_enabled"] = data.trend_filter_enabled;
+    if (data.trail_activate_pct !== undefined)
+      patch["trail_activate_pct"] = clamp(data.trail_activate_pct, 0.2, 10);
+    if (data.trail_giveback_pct !== undefined)
+      patch["trail_giveback_pct"] = clamp(data.trail_giveback_pct, 0.1, 5);
 
     const { data: saved, error } = await supabase
       .from("bot_settings")
@@ -319,6 +348,7 @@ export const runTick = createServerFn({ method: "POST" })
       volumeSpikeThreshold: settings.volume_spike_threshold,
       breakoutLookback: settings.breakout_lookback,
       minMomentumPct: settings.min_momentum_pct,
+      trendFilterEnabled: settings.trend_filter_enabled,
     };
 
     // --- market data -------------------------------------------------------
@@ -372,15 +402,56 @@ export const runTick = createServerFn({ method: "POST" })
     for (const position of openPositions.filter((p) => p.mode === settings.mode)) {
       const price = priceOf(position.symbol);
       if (!price) continue;
+
+      let stop = position.stop_loss_price;
+      let trailingActive = position.trailing_active;
+      const peak = Math.max(position.peak_price || position.entry_price, price);
+
+      if (settings.trailing_enabled) {
+        const nextStop = trailingStopPrice(
+          position.entry_price,
+          peak,
+          stop,
+          settings.trail_activate_pct,
+          settings.trail_giveback_pct,
+        );
+        if (nextStop !== null) {
+          stop = nextStop;
+          trailingActive = true;
+        }
+      }
+
+      if (peak !== position.peak_price || stop !== position.stop_loss_price) {
+        await supabase
+          .from("positions")
+          .update({ peak_price: peak, stop_loss_price: stop, trailing_active: trailingActive })
+          .eq("id", position.id)
+          .eq("user_id", userId);
+      }
+
       let reason: string | null = null;
-      if (price >= position.take_profit_price) reason = "take_profit";
-      else if (price <= position.stop_loss_price) reason = "stop_loss";
+      // With trailing on, a winner is left to run and only the rising stop
+      // closes it. Without trailing, the fixed take-profit still applies.
+      if (!settings.trailing_enabled && price >= position.take_profit_price) reason = "take_profit";
+      else if (price <= stop) reason = trailingActive ? "trailing_stop" : "stop_loss";
       if (!reason) continue;
 
-      const closed = await closeOne(supabase, userId, position, price, reason, settings.mode, credentials);
-      events.push(
-        `${position.symbol} closed at ${reason === "take_profit" ? "take-profit" : "stop-loss"} (${closed.pnl_pct.toFixed(2)}%)`,
+      const closed = await closeOne(
+        supabase,
+        userId,
+        { ...position, stop_loss_price: stop },
+        price,
+        reason,
+        settings.mode,
+        credentials,
       );
+      const label =
+        reason === "take_profit"
+          ? "take-profit"
+          : reason === "trailing_stop"
+            ? "trailing stop"
+            : "stop-loss";
+      events.push(`${position.symbol} closed at ${label} (${closed.pnl_pct.toFixed(2)}%)`);
     }
 
     const { data: refreshedOpen } = await supabase
@@ -517,6 +588,8 @@ async function openOne(
       notional_usdt: entryPrice * quantity,
       take_profit_price: entryPrice * (1 + settings.take_profit_pct / 100),
       stop_loss_price: entryPrice * (1 - settings.stop_loss_pct / 100),
+      peak_price: entryPrice,
+      trailing_active: false,
       source: "bot",
     })
     .select("*")
